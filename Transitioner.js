@@ -138,7 +138,7 @@ export class Transitioner extends React.Component {
     return getStateForNavChange(props, state);
   };
 
-  async _startTransition() {
+  async _startTransition(transitionToRun = null, runFunc = null) {
     // Put state in function scope, so we are confident that we refer to the exact same state later for getStateForNavChange.
     // Even though our state shouldn't change during the animation.
     const { state } = this;
@@ -151,13 +151,16 @@ export class Transitioner extends React.Component {
       descriptors,
     } = state;
 
-    const descriptor =
-      descriptors[transitionRouteKey] ||
-      transitioningFromDescriptors[transitionRouteKey];
-    const { runTransition } = descriptor.options;
-    const run = runTransition || defaultRunTransition;
-
-    const transition = transitions[transitionRouteKey];
+    let transition = transitionToRun;
+    let run = runFunc;
+    if(!transition && !run) {
+      const descriptor =
+        descriptors[transitionRouteKey] ||
+        transitioningFromDescriptors[transitionRouteKey];
+      const { runTransition } = descriptor.options;
+      run = runTransition || defaultRunTransition;
+      transition = transitions[transitionRouteKey];
+    }
     // Run animation, this might take some time..
     await run(
       transition,
@@ -188,8 +191,24 @@ export class Transitioner extends React.Component {
     }
   }
 
+  componentDidMount() {
+    return;
+    const { descriptors, navState } = this.state;
+    const transitionRouteKey = navState.routes[0].key;
+    const descriptor = descriptors[transitionRouteKey];
+    const { runTransition } = descriptor.options;
+    const run = runTransition || defaultRunTransition;
+    const transition = transitions[transitionRouteKey];
+    // Run start transitions
+    this._startTransition(transition, run).then(
+      () => {},
+      e => {
+        console.error("Error running transition:", e);
+      },
+    );
+  }
+
   componentDidUpdate(lastProps, lastState) {
-    console.log("Update");
     if (
       // If we are transitioning
       this.state.transitionRouteKey &&
