@@ -41,6 +41,26 @@ const defaultCreateTransition = transition => {
 
 const defaultRunTransition = () => {};
 
+defaultRenderScreen = (
+  ScreenComponent, transition, transitions, transitioningFromState, 
+  transitioningToState, transitionRouteKey, navigation, ref)=> {
+  return (
+    <ScreenComponent
+      transition={transition}
+      transitions={transitions}
+      transitioningFromState={transitioningFromState}
+      transitioningToState={transitioningToState}
+      transitionRouteKey={transitionRouteKey}
+      navigation={navigation}
+      transitionRef={ref}
+    />
+  );
+}
+
+defaultRenderContainer = (children) => (
+  <React.Fragment>{children}</React.Fragment>
+);
+
 const getStateForNavChange = (props, state) => {
   // by this point we know the nav state has changed and it is safe to provide a new state. static
   // getDerivedStateFromProps will never interrupt a transition (when there is state.transitionRouteKey),
@@ -206,6 +226,8 @@ export class Transitioner extends React.Component {
       descriptors,
     } = this.state;
 
+    const { navigationConfig } = this.props;
+
     const mainRouteKeys = navState.routes.map(r => r.key);
     let routeKeys = mainRouteKeys;
 
@@ -217,15 +239,22 @@ export class Transitioner extends React.Component {
       }
     }
 
+    // Use render container from last route descriptor
+    const renderContainerFunc = 
+      navigationConfig && navigationConfig.navigationOptions && 
+      navigationConfig.navigationOptions.renderContainer 
+      || defaultRenderContainer;
+
     return (
       <TransitionContext.Provider value={this._transitionContext}>
-        {routeKeys.map((key, index) => {
+        {renderContainerFunc(routeKeys.map((key, index) => {
           const ref =
             this._transitionRefs[key] ||
             (this._transitionRefs[key] = React.createRef());
           const descriptor =
             descriptors[key] || transitioningFromDescriptors[key];
           const C = descriptor.getComponent();
+          const renderFunc = descriptor.options.renderScreen || defaultRenderScreen
 
           const backScreenStyles = {}; // FIX THIS:
           // const backScreenRouteKeys = routeKeys.slice(index + 1);
@@ -250,21 +279,13 @@ export class Transitioner extends React.Component {
               key={key}
             >
               <NavigationProvider value={descriptor.navigation}>
-                <C
-                  transition={transition}
-                  transitions={transitions}
-                  transitioningFromState={transitioningFromState}
-                  transitioningToState={
-                    transitionRouteKey ? this.props.navigation.state : null
-                  }
-                  transitionRouteKey={transitionRouteKey}
-                  navigation={descriptor.navigation}
-                  transitionRef={ref}
-                />
+                {renderFunc(C, transition, transitions, transitioningFromState, 
+                  transitionRouteKey ? this.props.navigation.state : null, 
+                  transitionRouteKey, descriptor.navigation, ref)}
               </NavigationProvider>
             </Animated.View>
           );
-        })}
+        }))}
       </TransitionContext.Provider>
     );
   }
@@ -272,7 +293,7 @@ export class Transitioner extends React.Component {
 
 const createTransitionNavigator = (routeConfig, opts) => {
   const router = StackRouter(routeConfig, opts);
-  const Nav = createNavigator(Transitioner, router);
+  const Nav = createNavigator(Transitioner, router, opts);
   return Nav;
 };
 
