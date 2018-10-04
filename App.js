@@ -9,6 +9,7 @@ import Modal from "./examples/Modal";
 import Gesture from "./examples/Gesture";
 import CardStack from "./examples/CardStack";
 import SharedEl from "./examples/SharedEl";
+import Feed from "./examples/SharedElements";
 
 import { Provider as LayoutProvider } from "./LayoutContext";
 
@@ -32,6 +33,7 @@ const EXAMPLES = {
   Gesture,
   CardStack,
   SharedEl,
+  Feed,
 };
 
 const AppNavigator = createSwitchNavigator({
@@ -39,10 +41,10 @@ const AppNavigator = createSwitchNavigator({
   ...EXAMPLES,
 });
 
-// const StatefulAppNavigator = createNavigationContainer(AppNavigator);
+const StatefulAppNavigator = createNavigationContainer(AppNavigator);
 // const StatefulAppNavigator = createNavigationContainer(Fade);
 // const StatefulAppNavigator = createNavigationContainer(Modal);
-const StatefulAppNavigator = createNavigationContainer(Gesture);
+// const StatefulAppNavigator = createNavigationContainer(Gesture);
 // const StatefulAppNavigator = createNavigationContainer(CardStack);
 // const StatefulAppNavigator = createNavigationContainer(SharedEl);
 

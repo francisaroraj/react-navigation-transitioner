@@ -189,6 +189,7 @@ export class Transitioner extends React.Component {
   }
 
   componentDidUpdate(lastProps, lastState) {
+    console.log("Update");
     if (
       // If we are transitioning
       this.state.transitionRouteKey &&
