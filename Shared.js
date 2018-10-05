@@ -164,7 +164,7 @@ const getTransitionElementStyle = (transitionContext, screenContext, id) => {
   const fromState = screenContext.getTransitioningFromState();
   const toState = screenContext.getTransitioningToState();
   const thisScreenKey = screenContext.getNavigation().state.key;
-  if (!transition) {
+  if (!transition || !fromState) {
     return [{ transform: [] }];
   }
   const toLayout = getLayout(transition.toLayouts, id);

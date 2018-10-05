@@ -44,6 +44,9 @@ export default StyleSheet.create({
     backgroundColor: '#FFF',
     justifyContent: 'flex-start',
   },
+  bigImageContainer: {
+
+  },
   bigImage: {
     width: Dimensions.get('window').width,
     height: Dimensions.get('window').width,
@@ -62,7 +65,6 @@ export default StyleSheet.create({
   },
   buttons: {
     flexDirection: 'row',
-    padding: 10,
-    paddingTop: 50,
+    padding: 10,    
   },
 });

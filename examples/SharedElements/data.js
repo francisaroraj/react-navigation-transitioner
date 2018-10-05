@@ -21,7 +21,8 @@ export const createItemsData = () => {
     }
     return comments;
   };
-  const items = getRandomImages(15, Dimensions.get('window').width).map(img => ({
+  const items = getRandomImages(15, Dimensions.get('window').width).map((img, index) => ({
+    id: index.toString(),
     source: img,
     comments: createComments(),
     avatar: users[Math.floor((Math.random() * 15))],

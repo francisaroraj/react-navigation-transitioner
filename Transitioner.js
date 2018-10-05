@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, InteractionManager } from "react-native";
 import Animated from "react-native-reanimated";
 import {
   createNavigator,
@@ -41,26 +41,6 @@ const defaultCreateTransition = transition => {
 
 const defaultRunTransition = () => {};
 
-defaultRenderScreen = (
-  ScreenComponent, transition, transitions, transitioningFromState, 
-  transitioningToState, transitionRouteKey, navigation, ref)=> {
-  return (
-    <ScreenComponent
-      transition={transition}
-      transitions={transitions}
-      transitioningFromState={transitioningFromState}
-      transitioningToState={transitioningToState}
-      transitionRouteKey={transitionRouteKey}
-      navigation={navigation}
-      transitionRef={ref}
-    />
-  );
-}
-
-defaultRenderContainer = (children) => (
-  <React.Fragment>{children}</React.Fragment>
-);
-
 const getStateForNavChange = (props, state) => {
   // by this point we know the nav state has changed and it is safe to provide a new state. static
   // getDerivedStateFromProps will never interrupt a transition (when there is state.transitionRouteKey),
@@ -70,7 +50,7 @@ const getStateForNavChange = (props, state) => {
 
   // Transitions are requested by setting nav state.isTransitioning to true.
   // If false, we set the state immediately without transition
-  if (!nextNavState.isTransitioning) {
+  if (!nextNavState.isTransitioning && !state.isMounted) {
     return {
       transitions: state.transitions,
       transitionRouteKey: null,
@@ -78,6 +58,7 @@ const getStateForNavChange = (props, state) => {
       transitioningFromDescriptors: null,
       navState: nextNavState,
       descriptors: props.descriptors,
+      isMounted: false,
     };
   }
   const transitionRouteKey = getTransitionOwnerRouteKey(
@@ -102,10 +83,11 @@ const getStateForNavChange = (props, state) => {
       [transitionRouteKey]: transition,
     },
     transitionRouteKey,
-    transitioningFromState: state.navState,
+    transitioningFromState: state.isMounted ? null : state.navState,
     transitioningFromDescriptors: state.descriptors,
     navState: nextNavState,
     descriptors: props.descriptors,
+    isMounted: false,
   };
 };
 
@@ -121,14 +103,18 @@ export class Transitioner extends React.Component {
     // this is the current navigation state and descriptors:
     navState: this.props.navigation.state,
     descriptors: this.props.descriptors,
+    isMounted: true,
   };
 
   // never re-assign this!
-  _transitionRefs = {};
+  _transitionRefs = {};  
 
   static getDerivedStateFromProps = (props, state) => {
     // Transition only happens when nav state changes
-    if (props.navigation.state === state.navState) {
+    if(state.isMounted) {
+      return getStateForNavChange(props, state);
+    }
+    if (props.navigation.state === state.navState) {      
       return state;
     }
     // Never interrupt a transition in progress.
@@ -188,8 +174,25 @@ export class Transitioner extends React.Component {
     }
   }
 
+  async componentDidMount() {
+    // run the initial transition. This one is a bit special, since 
+    // the navState is not in transitioning mode. Try to see if we can find a 
+    // transition for the first screen    
+    if (
+      // If we are transitioning
+      this.state.transitionRouteKey
+    ) {
+      InteractionManager.runAfterInteractions(() => 
+        this._startTransition().then(
+          () => {},
+          e => {
+            console.error("Error running transition:", e);
+          },
+        ));
+    }
+  }
+
   componentDidUpdate(lastProps, lastState) {
-    console.log("Update");
     if (
       // If we are transitioning
       this.state.transitionRouteKey &&
@@ -214,7 +217,7 @@ export class Transitioner extends React.Component {
       );
       const key = transitionRouteKey || defaultTransitionKey;
       return transitions[key];
-    },
+    }
   };
 
   render() {
@@ -227,8 +230,6 @@ export class Transitioner extends React.Component {
       descriptors,
     } = this.state;
 
-    const { navigationConfig } = this.props;
-
     const mainRouteKeys = navState.routes.map(r => r.key);
     let routeKeys = mainRouteKeys;
 
@@ -240,22 +241,15 @@ export class Transitioner extends React.Component {
       }
     }
 
-    // Use render container from last route descriptor
-    const renderContainerFunc = 
-      navigationConfig && navigationConfig.navigationOptions && 
-      navigationConfig.navigationOptions.renderContainer 
-      || defaultRenderContainer;
-
     return (
       <TransitionContext.Provider value={this._transitionContext}>
-        {renderContainerFunc(routeKeys.map((key, index) => {
+        {routeKeys.map((key, index) => {
           const ref =
             this._transitionRefs[key] ||
             (this._transitionRefs[key] = React.createRef());
           const descriptor =
             descriptors[key] || transitioningFromDescriptors[key];
           const C = descriptor.getComponent();
-          const renderFunc = descriptor.options.renderScreen || defaultRenderScreen
 
           const backScreenStyles = {}; // FIX THIS:
           // const backScreenRouteKeys = routeKeys.slice(index + 1);
@@ -280,13 +274,21 @@ export class Transitioner extends React.Component {
               key={key}
             >
               <NavigationProvider value={descriptor.navigation}>
-                {renderFunc(C, transition, transitions, transitioningFromState, 
-                  transitionRouteKey ? this.props.navigation.state : null, 
-                  transitionRouteKey, descriptor.navigation, ref)}
+                <C
+                  transition={transition}
+                  transitions={transitions}
+                  transitioningFromState={transitioningFromState}
+                  transitioningToState={
+                    transitionRouteKey ? this.props.navigation.state : null
+                  }
+                  transitionRouteKey={transitionRouteKey}
+                  navigation={descriptor.navigation}
+                  transitionRef={ref}
+                />
               </NavigationProvider>
             </Animated.View>
           );
-        }))}
+        })}
       </TransitionContext.Provider>
     );
   }
@@ -294,7 +296,7 @@ export class Transitioner extends React.Component {
 
 const createTransitionNavigator = (routeConfig, opts) => {
   const router = StackRouter(routeConfig, opts);
-  const Nav = createNavigator(Transitioner, router, opts);
+  const Nav = createNavigator(Transitioner, router);
   return Nav;
 };
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Button } from "react-native";
 import {
-  createSwitchNavigator,
+  createStackNavigator,
   createNavigationContainer,
 } from "react-navigation";
 import Fade from "./examples/Fade";
@@ -9,11 +9,11 @@ import Modal from "./examples/Modal";
 import Gesture from "./examples/Gesture";
 import CardStack from "./examples/CardStack";
 import SharedEl from "./examples/SharedEl";
-import Feed from "./examples/SharedElements";
+import PhotosFeed from "./examples/SharedElements";
 
 import { Provider as LayoutProvider } from "./LayoutContext";
 
-process.env.REACT_NAV_LOGGING = true;
+// process.env.REACT_NAV_LOGGING = true;
 
 const Examples = ({ navigation }) => (
   <View style={{ flex: 1, justifyContent: "center" }}>
@@ -33,10 +33,10 @@ const EXAMPLES = {
   Gesture,
   CardStack,
   SharedEl,
-  Feed,
+  PhotosFeed,
 };
 
-const AppNavigator = createSwitchNavigator({
+const AppNavigator = createStackNavigator({
   Examples,
   ...EXAMPLES,
 });
