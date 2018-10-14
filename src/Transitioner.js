@@ -36,6 +36,7 @@ const defaultCreateTransition = transition => {
 };
 
 const defaultRunTransition = () => {};
+const defaultFinishTransition = () => {};
 
 const defaultRenderScreen = (
   ScreenComponent, transition, transitions, transitioningFromState,
@@ -192,6 +193,17 @@ export class Transitioner extends React.Component {
     } else {
       // Navigation state prop has changed during the transtion! Schedule another transition
       this.setState(getStateForNavChange(this.props, state));
+    }
+
+    if (transition.progress) {
+      const { finishTransition } = descriptor.options;
+      const finishRun = finishTransition || defaultFinishTransition;
+      await finishRun(
+        transition,
+        this._transitionRefs,
+        transitioningFromState,
+        navState,
+      );
     }
   }
 
