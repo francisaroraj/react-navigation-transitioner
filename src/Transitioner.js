@@ -44,7 +44,7 @@ const defaultRenderScreen = (
 ) => (
   <Animated.View
     style={[{ ...StyleSheet.absoluteFillObject }, behindScreenStyles]}
-    pointerEvents={'auto'}    
+    pointerEvents={'auto'}
   >
     <ScreenComponent
       transition={transition}
@@ -299,14 +299,14 @@ export class Transitioner extends React.Component {
           }
 
           const renderFunc = descriptor.options.renderScreen || defaultRenderScreen;
-          
+
           return (
-            <NavigationProvider key={key} value={descriptor.navigation}>              
+            <NavigationProvider key={key} value={descriptor.navigation}>
               {renderFunc(C, transition, transitions, transitioningFromState,
                 transitionRouteKey ? navigation.state : null,
-                transitionRouteKey, descriptor.navigation, ref, 
+                transitionRouteKey, descriptor.navigation, ref,
                 behindScreenStyles, key)}
-            </NavigationProvider>            
+            </NavigationProvider>
           );
         }))}
       </TransitionContext.Provider>
