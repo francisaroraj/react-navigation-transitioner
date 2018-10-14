@@ -41,6 +41,32 @@ const defaultCreateTransition = transition => {
 
 const defaultRunTransition = () => {};
 
+const defaultRenderScreen = (
+  ScreenComponent, transition, transitions, transitioningFromState, 
+  transitioningToState, transitionRouteKey, navigation, ref) => {
+  return (
+    <Animated.View
+      style={[{ ...StyleSheet.absoluteFillObject }]}
+      pointerEvents={"auto"}
+    >
+      <ScreenComponent
+        transition={transition}
+        transitions={transitions}
+        transitioningFromState={transitioningFromState}
+        transitioningToState={transitioningToState}
+        transitionRouteKey={transitionRouteKey}
+        navigation={navigation}
+        transitionRef={ref}
+      />
+    </Animated.View>
+  );
+}
+
+defaultRenderContainer = (children) => (
+  <React.Fragment>{children}</React.Fragment>
+);
+
+
 const getStateForNavChange = (props, state) => {
   // by this point we know the nav state has changed and it is safe to provide a new state. static
   // getDerivedStateFromProps will never interrupt a transition (when there is state.transitionRouteKey),
@@ -83,7 +109,7 @@ const getStateForNavChange = (props, state) => {
       [transitionRouteKey]: transition,
     },
     transitionRouteKey,
-    transitioningFromState: state.isMounted ? null : state.navState,
+    transitioningFromState: state.navState,
     transitioningFromDescriptors: state.descriptors,
     navState: nextNavState,
     descriptors: props.descriptors,
@@ -137,13 +163,14 @@ export class Transitioner extends React.Component {
       descriptors,
     } = state;
 
-    const descriptor =
-      descriptors[transitionRouteKey] ||
-      transitioningFromDescriptors[transitionRouteKey];
+    const descriptor = descriptors[transitionRouteKey] 
+      || transitioningFromDescriptors[transitionRouteKey];
+    
     const { runTransition } = descriptor.options;
     const run = runTransition || defaultRunTransition;
 
     const transition = transitions[transitionRouteKey];
+    
     // Run animation, this might take some time..
     await run(
       transition,
@@ -230,6 +257,8 @@ export class Transitioner extends React.Component {
       descriptors,
     } = this.state;
 
+    const { navigationConfig } = this.props;
+
     const mainRouteKeys = navState.routes.map(r => r.key);
     let routeKeys = mainRouteKeys;
 
@@ -241,54 +270,32 @@ export class Transitioner extends React.Component {
       }
     }
 
+    // Use render container from last route descriptor
+    const renderContainerFunc = 
+      navigationConfig && navigationConfig.navigationOptions && 
+      navigationConfig.navigationOptions.renderContainer 
+      || defaultRenderContainer;
+
+    const transition = transitions[transitionRouteKey];
+
     return (
       <TransitionContext.Provider value={this._transitionContext}>
-        {routeKeys.map((key, index) => {
-          const ref =
-            this._transitionRefs[key] ||
-            (this._transitionRefs[key] = React.createRef());
-          const descriptor =
-            descriptors[key] || transitioningFromDescriptors[key];
+        {renderContainerFunc(routeKeys.map((key, index) => {
+          
+          const ref = this._transitionRefs[key] ||(this._transitionRefs[key] = React.createRef());
+          const descriptor = descriptors[key] || transitioningFromDescriptors[key];
           const C = descriptor.getComponent();
+          const renderFunc = descriptor.options.renderScreen || defaultRenderScreen
+          // let transition = transitions[key];
 
-          const backScreenStyles = {}; // FIX THIS:
-          // const backScreenRouteKeys = routeKeys.slice(index + 1);
-          // const backScreenStyles = backScreenRouteKeys.map(
-          //   backScreenRouteKey => {
-          //     const backScreenDescriptor =
-          //       toDescriptors[backScreenRouteKey] ||
-          //       this.state.descriptors[backScreenRouteKey];
-          //     const { options } = backScreenDescriptor;
-          //     if (!transition || !options.getBehindTransitionAnimatedStyle) {
-          //       return {};
-          //     }
-          //     return options.getBehindTransitionAnimatedStyle(transition);
-          //   },
-          // );
-          let transition = transitions[key];
-
-          return (
-            <Animated.View
-              style={[{ ...StyleSheet.absoluteFillObject }, backScreenStyles]}
-              pointerEvents={"auto"}
-              key={key}
-            >
-              <NavigationProvider value={descriptor.navigation}>
-                <C
-                  transition={transition}
-                  transitions={transitions}
-                  transitioningFromState={transitioningFromState}
-                  transitioningToState={
-                    transitionRouteKey ? this.props.navigation.state : null
-                  }
-                  transitionRouteKey={transitionRouteKey}
-                  navigation={descriptor.navigation}
-                  transitionRef={ref}
-                />
-              </NavigationProvider>
-            </Animated.View>
+          return(
+            <NavigationProvider key={key} value={descriptor.navigation}>
+              {renderFunc(C, transition, transitions, transitioningFromState, 
+                  transitionRouteKey ? this.props.navigation.state : null, 
+                  transitionRouteKey, descriptor.navigation, ref)}
+            </NavigationProvider>
           );
-        })}
+        }))}
       </TransitionContext.Provider>
     );
   }

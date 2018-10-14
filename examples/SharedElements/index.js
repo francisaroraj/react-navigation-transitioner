@@ -7,9 +7,7 @@ import { createFluidNavigator } from './lib/createFluidNavigator';
 import { TransitionView } from './lib/TransitionView';
 
 import styles from './styles';
-import { Avatar, AvatarImage, SmallAvatarImage } from './avatar';
 import { createItemsData } from './data';
-
 
 const ImageFooter = () => (
   <View style={styles.imageHeader}>
@@ -17,11 +15,26 @@ const ImageFooter = () => (
   </View>
 );
 
+const Avatar = ({ avatar }) => (
+  <View style={styles.imageHeader}>
+    <AvatarImage source={avatar.source} />
+    <Text style={styles.avatarText}>{avatar.name}</Text>
+  </View>
+);
+
+const AvatarImage = ({ source }) => (
+  <Image source={source} style={styles.avatarImage} />
+);
+
+const SmallAvatarImage = ({ source }) => (
+  <Image source={source} style={styles.avatarSmallImage} />
+);
+
 class Card extends React.Component {
   render() {
     const { item, onSelect } = this.props;
     return (
-      <View style={styles.card}>
+      <TransitionView style={styles.card}>
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => onSelect && onSelect(item)}
@@ -30,7 +43,7 @@ class Card extends React.Component {
           <Image style={styles.smallImage} source={item.source} />
           <ImageFooter />
         </TouchableOpacity>
-      </View>
+      </TransitionView>
     );
   }
 }
@@ -87,7 +100,7 @@ class ImageDetailsScreen extends React.Component {
                 item: navigation.getParam('item') })
               }
               >
-              <Text>Comments</Text>
+              <Text style={{color:'#04F', textDecorationLine:'underline'}}>Comments</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -107,17 +120,18 @@ class CommentsScreen extends React.Component {
     const { navigation } = this.props;
     return (
       <SafeAreaView style={styles.bigCard}>
+        <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backHeader}
+          >
+            <Text style={{ marginRight: 8 }}>←</Text>
+            <Text>Back</Text>
+          </TouchableOpacity>
         <ScrollView style={styles.commentsContainer}>
           {navigation.getParam('item').comments.map((comment, index) => (
             <Comment key={index} comment={comment} />
           ))}
         </ScrollView>
-        <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.buttons}
-          >
-            <Text>Back</Text>
-          </TouchableOpacity>
       </SafeAreaView>
     );
   }

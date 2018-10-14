@@ -67,4 +67,12 @@ export default StyleSheet.create({
     flexDirection: 'row',
     padding: 10,    
   },
+  backHeader: {
+    borderBottomColor: '#CCC',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    padding: 10,
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  }
 });

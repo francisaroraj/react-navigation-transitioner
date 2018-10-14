@@ -16,11 +16,12 @@ export const TransitionView = (props) => {
           {fluidTransitionContext => {
             return (
               <Animated.View {...props} 
-                style={[style, Transitions.horizontal(
+                style={[style, Transitions.Horizontal(
                   fluidTransitionContext.getNavigation().state.key,
-                  transitionContext.getTransition(), 
-                  fluidTransitionContext.getTransitioningFromState(),
-                  fluidTransitionContext.getTransitioningToState())]}
+                  fluidTransitionContext.getTransitionProgress(transitionContext.getTransition(
+                    fluidTransitionContext.getNavigation().state.key)),                
+                  fluidTransitionContext.getIsForwardDirection(),
+                  fluidTransitionContext.getIsTransitioningToRoute())]}
                 >
                 {children}
               </Animated.View>

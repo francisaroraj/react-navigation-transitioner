@@ -22,34 +22,25 @@ const opts = {
           duration: 500,
           easing: Easing.inOut(Easing.cubic),
         }).start(resolve);
-    })
+    }),
+    renderScreen: (
+      ScreenComponent, transition, transitions, transitioningFromState, 
+      transitioningToState, transitionRouteKey, navigation, ref) => {
+        return (
+        <TransitionScreen
+          navigation={navigation}
+          transition={transition} 
+          transitioningFromState={transitioningFromState}
+          transitioningToState={transitioningToState}
+          transitionRouteKey={transitionRouteKey}
+        >
+          <ScreenComponent navigation={navigation}/>
+        </TransitionScreen>
+      );}
   }
 }
 
 export const createFluidNavigator = (routeConfigs, options) => {
-  const wrappedRouteConfigs = {};
-  Object.keys(routeConfigs).map(routeName => {
-    const userRoute = routeConfigs[routeName];
-    const Screen = userRoute.screen || userRoute;
-    wrappedRouteConfigs[routeName] = {
-      screen: (props) => {        
-        return (
-          <TransitionScreen {...props}>
-            <Screen {...props}/>
-          </TransitionScreen>
-        );
-      }
-    };
-  });
-  
-  const TransitionNavigator = createTransitionNavigator(wrappedRouteConfigs, opts);
-  const FluidNavigator = (props) => {
-    return (
-      <Animated.View style={{ flex: 1 }}>
-        <TransitionNavigator {...props} />
-      </Animated.View>
-    );
-  }
-  FluidNavigator.router = TransitionNavigator.router;
-  return FluidNavigator;
+  const TransitionNavigator = createTransitionNavigator(routeConfigs, opts);
+  return TransitionNavigator;
 }
