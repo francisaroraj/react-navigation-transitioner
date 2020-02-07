@@ -27,7 +27,7 @@ const HomeScreen = ({ navigation }) => (
       onPress={() => {
         navigation.navigate("ProfileScreen", { name: "Jane" });
       }}
-      title="Go to Jane's profile"
+      title="Go to Jane's profile2"
     />
     <Button
       onPress={() => {

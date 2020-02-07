@@ -30,6 +30,8 @@ const PRODUCTS = {
 };
 
 const ProductPhoto = ({ onPress, style, id }) => {
+  console.log("onPress+id")
+  console.log(onPress + " " + style + " " + id)
   const i = (
     <Image
       source={{
@@ -67,8 +69,6 @@ class Home extends React.Component {
             <SafeAreaView key={id}>
               <View style={{ padding: 20, marginBottom: 80 }}>
                 <ProductPhoto
-                  id={id}
-                  style={{ width: 200, aspectRatio: 1 }}
                   onPress={() => {
                     this.props.navigation.navigate({
                       routeName: "Product",
@@ -76,6 +76,8 @@ class Home extends React.Component {
                       key: id,
                     });
                   }}
+                  id={id}
+                  style={{ width: 200, aspectRatio: 1 }}
                 />
                 <View style={{ alignSelf: "flex-start" }}>
                   <SharedText id={id} fontSize={22} color={"black"}>
@@ -139,37 +141,25 @@ class Product extends React.Component {
   render() {
     const { navigation } = this.props;
     const product = PRODUCTS[navigation.getParam("id")];
+    console.log("pressed " + product)
     return (
       <SharedFadeTransition {...this.props} ref={this.props.transitionRef}>
         <ScrollView style={{ flex: 1, backgroundColor: "white" }}>
           <ProductPhoto
-            id={navigation.getParam("id")}
+            onPress={
+              () => { console.log("pressed") }
+            }
             style={{ alignSelf: "stretch", aspectRatio: 1 }}
+            id={navigation.getParam("id")}
           />
           <View
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 100,
-            }}
-          >
-            <SharedText
-              color="white"
-              fontSize={50}
-              id={navigation.getParam("id")}
-            >
+            style={{ position: "absolute", top: 0, left: 0, right: 0, height: 100, }} >
+            <SharedText color="white" fontSize={50} id={navigation.getParam("id")} >
               {product.name}
             </SharedText>
           </View>
           <View style={{ flex: 1 }}>
-            <Button
-              onPress={() => {
-                navigation.goBack();
-              }}
-              title="Go back"
-            />
+            <Button onPress={() => { navigation.goBack(); }} title="Go back" />
 
             <View style={{ flexDirection: "row" }}>
               {Object.keys(PRODUCTS).map(id => {
@@ -178,8 +168,6 @@ class Product extends React.Component {
                 }
                 return (
                   <ProductPhoto
-                    key={id}
-                    id={id}
                     onPress={() => {
                       navigation.navigate({
                         routeName: "Product",
@@ -188,6 +176,8 @@ class Product extends React.Component {
                       });
                     }}
                     style={{ width: 80, aspectRatio: 1 }}
+                    id={id}
+                    key={id}
                   />
                 );
               })}

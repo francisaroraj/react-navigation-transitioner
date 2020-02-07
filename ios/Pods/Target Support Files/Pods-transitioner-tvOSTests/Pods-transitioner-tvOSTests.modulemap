@@ -1,0 +1,6 @@
+framework module Pods_transitioner_tvOSTests {
+  umbrella header "Pods-transitioner-tvOSTests-umbrella.h"
+
+  export *
+  module * { export * }
+}

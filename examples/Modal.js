@@ -110,7 +110,7 @@ class HomeScreen extends React.Component {
           onPress={() => {
             navigation.navigate("ProfileScreen", { name: "Jane" });
           }}
-          title="Go to Jane's profile"
+          title="Go to Jane's profile4"
         />
         <Button
           onPress={() => {
